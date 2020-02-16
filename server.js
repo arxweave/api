@@ -14,7 +14,7 @@ app.use(express.json())
 const PORT = 8080
 
 AWS.config.update({
-  region: "us-west-2"
+  region: "eu-central-1"
 })
 
 const dynamoDB = new AWS.DynamoDB()

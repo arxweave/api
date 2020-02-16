@@ -25,8 +25,9 @@ Placing [arxiv.org](https://arxiv.org/) on the [permaweb](https://www.arweave.or
       "dq": "...",
       "qi": "..."
       }
-
     ```
+
+    FIXME: add this moment you need to add a `jwk.json` file in the root folder.
 3. Clone the `.env.example`, rename to `.env`, and set `JWK_PATH` to the full path of the keystore file.
     ```zsh
       cp .env.example .env

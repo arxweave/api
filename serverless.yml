@@ -1,4 +1,6 @@
-service: serverless-nodejs-app
+app: sw4rtz-it-app
+org: wagnernicolas1
+service: sw4rtz-it
 
 provider:
   name: aws
@@ -8,7 +10,7 @@ provider:
 
 functions:
   app:
-    handler: app.server # reference the file and exported method
+    handler: handler.server
     events: # events trigger lambda functions
       - http: # this is an API Gateway HTTP event trigger
           path: /
@@ -18,3 +20,19 @@ functions:
           path: /{proxy+}
           method: ANY
           cors: true
+
+resources: # CloudFormation template syntax from here on.
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Arxweave
+        AttributeDefinitions:
+          - AttributeName: arXivID
+            AttributeType: S
+        KeySchema:
+          - AttributeName: arXivID
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 25
+          WriteCapacityUnits: 25
