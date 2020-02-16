@@ -1,0 +1,27 @@
+{
+  "name": "sw4rtz.it",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "serverless-http": "^2.3.1",
+    "arweave": "^1.6.0",
+    "aws-sdk": "^2.606.0",
+    "axios": "^0.19.1",
+    "dotenv": "^8.2.0",
+    "fast-xml-parser": "^3.16.0",
+    "he": "^1.2.0",
+    "pdf-to-base64": "^1.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
