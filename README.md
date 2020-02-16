@@ -35,6 +35,6 @@ Placing [arxiv.org](https://arxiv.org/) on the [permaweb](https://www.arweave.or
 
 
 4. Launch
-  ```zsh
-    yarn && yarn start
-  ```
+    ```zsh
+      yarn && yarn start
+    ```
