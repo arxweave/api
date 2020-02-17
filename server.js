@@ -125,7 +125,9 @@ app.post('/new', async (request, response) => {
 
           response.send({
             status: broadcastedTx.status === 200 ? 'Success' : 'Error',
-            msg: `Data is uploading to arweave with this broadcast ID ${broadcastedTx.id} and Arweave status ${broadcastedTx.status}.`
+            msg: `Data is uploading to arweave with this broadcast ID ${broadcastedTx.id} and Arweave status ${broadcastedTx.status}.`,
+            txId: `${broadcastedTx.id}`,
+            txStatus: `${broadcastedTx.status}`
           })
         } catch (error) {
           console.error(error)
