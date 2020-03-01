@@ -1,1 +1,1 @@
-web = yarn launch
+web = node app.js
