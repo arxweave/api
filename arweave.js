@@ -1,11 +1,9 @@
 require('dotenv').config()
+
 const fs = require('fs')
+const { getJwk } = require('./src/utils')
 
-// TODO: put jwt file as serverless env
-// const jwkPath = process.env.JWK_PATH
-// const jwk = JSON.parse(fs.readFileSync(jwkPath))
-
-const jwk = require('./jwk.json') // TODO: remove this line if jwtFile is a serverless env
+const jwk = getJwk()
 
 const arweave = require('arweave/node').init({
   host: 'arweave.net',// Hostname or IP address for a Arweave host
