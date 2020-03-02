@@ -3,19 +3,27 @@ const AWS = require('aws-sdk')
 const axios = require('axios')
 const parser = require('fast-xml-parser')
 const pdf2base64 = require('pdf-to-base64')
-
 const ArweaveService = require('./arweave.js')()
 
-let app = express()
-
-app.use(express.urlencoded({extended: true}))
-app.use(express.json())
 
 AWS.config.update({
-  region: "eu-central-1"
+  region: "eu-central-1",
+})
+AWS.config.logger = console;
+
+const dynamoDB = new AWS.DynamoDB({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+})
+const docClient = new AWS.DynamoDB.DocumentClient({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 })
 
-const dynamoDB = new AWS.DynamoDB()
+const app = express()
+
+app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
 
 // Get all arXiv documents
 // TODO: add pagination.
@@ -24,8 +32,6 @@ app.get('/all', (request, response) => {
     TableName: 'Arxweave',
     ProjectionExpression: 'arXivID, arXivURL, authors, broadcastedTxID, pdfLink, published, summary, title, statusArweave'
   }
-
-  const docClient = new AWS.DynamoDB.DocumentClient()
 
   // FIXME: show errors to console.log() .
   docClient.scan(params, (err, data) => response.send(data !== null ? data.Items : `{msg: 'There is not any item.'}`)) // NOTE: 1MB limit.

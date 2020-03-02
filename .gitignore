@@ -3,3 +3,4 @@ node_modules
 jwk.json
 node_modules/.cache/
  .serverless
+ credentials
