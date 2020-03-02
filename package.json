@@ -15,15 +15,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1",
-    "serverless-http": "^2.3.1",
     "arweave": "^1.6.0",
     "aws-sdk": "^2.606.0",
     "axios": "^0.19.1",
+    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
+    "express": "^4.17.1",
     "fast-xml-parser": "^3.16.0",
     "he": "^1.2.0",
-    "pdf-to-base64": "^1.0.2"
+    "pdf-to-base64": "^1.0.2",
+    "serverless-http": "^2.3.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.2"

@@ -1,4 +1,5 @@
 const express = require('express')
+const cors = require('cors')
 const AWS = require('aws-sdk')
 const axios = require('axios')
 const parser = require('fast-xml-parser')
@@ -20,9 +21,38 @@ const docClient = new AWS.DynamoDB.DocumentClient({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 })
 
+
+// https://dustinpfister.github.io/2018/01/28/heroku-cors/
+const conf = {
+  originUndefined: function (req, res, next) {
+    if (!req.headers.origin) {
+      res.json({
+        mess: 'Hi you are visiting the service locally. If this was a CORS the origin header should not be undefined'
+      });
+    } else {
+      next();
+    }
+  },
+  // Cross Origin Resource Sharing Options
+  cors: {
+    // origin handler
+    origin: function (origin, cb) {
+      // setup a white list
+      let wl = [process.env.APP_DOMAIN, 'https://sw4rtz.netlify.com'].filter(Boolean);
+      if (wl.indexOf(origin) != -1) {
+        cb(null, true);
+      } else {
+        cb(new Error('invalid origin: ' + origin), false);
+      }
+    },
+    optionsSuccessStatus: 200
+  }
+}
+
 const app = express()
 
 app.use(express.urlencoded({ extended: true }))
+app.use(conf.originUndefined, cors(conf.cors))
 app.use(express.json())
 
 // Get all arXiv documents
