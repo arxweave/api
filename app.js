@@ -21,13 +21,30 @@ const docClient = new AWS.DynamoDB.DocumentClient({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 })
 
+// Setup a white list for CORS
+const whilelist = [
+  process.env.APP_DOMAIN,
+  'https://sw4rtz.it',
+  'https://wwww.sw4rtz.it',
+  'https://sw4rtz.netlify.com',
+  'https://localhost:3000',
+  'http://localhost:3000',
+  'https://localhost:8000',
+  'http://localhost:8000'
+].filter(Boolean);
 
+const isValidReferrrer = (r) => whilelist.filter(w => r.includes(w))
+
+// CORS config adapted from
 // https://dustinpfister.github.io/2018/01/28/heroku-cors/
 const conf = {
+  // Our frontend uses a webnpack proxy to call the dev api. When doing so the request is sent from the
+  // front projects domain (localhost) and the browser considers the request as 'same-origin' so it
+  // doesn't add the 'origin' header. At this point our api receives a request with 'origin' undefined.
   originUndefined: function (req, res, next) {
-    if (!req.headers.origin) {
+    if (!req.headers.origin && req.headers.referer && !isValidReferrrer(req.headers.referer)) {
       res.json({
-        mess: 'Hi you are visiting the service locally. If this was a CORS the origin header should not be undefined'
+        msg: 'Hi you are visiting the service locally. If this was a CORS the origin header should not be undefined'
       });
     } else {
       next();
@@ -37,9 +54,8 @@ const conf = {
   cors: {
     // origin handler
     origin: function (origin, cb) {
-      // setup a white list
-      let wl = [process.env.APP_DOMAIN, 'https://sw4rtz.netlify.com'].filter(Boolean);
-      if (wl.indexOf(origin) != -1) {
+      // The origin header is set by the browser.
+      if (!origin || whilelist.indexOf(origin) != -1) {
         cb(null, true);
       } else {
         cb(new Error('invalid origin: ' + origin), false);
