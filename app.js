@@ -67,6 +67,17 @@ const conf = {
 
 const app = express()
 
+app.use(function (req, res, next) {
+
+  const origins = whilelist.join(',')
+  res.header('Access-Control-Allow-Origin', 'https://sw4rtz.it')
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
 app.use(express.urlencoded({ extended: true }))
 app.use(conf.originUndefined, cors(conf.cors))
 app.use(express.json())
