@@ -67,9 +67,9 @@ const conf = {
 
 const app = express()
 
+app.use(express.urlencoded({ extended: true }))
+app.use(conf.originUndefined, cors(conf.cors))
 app.use(function (req, res, next) {
-
-  const origins = whilelist.join(',')
   res.header('Access-Control-Allow-Origin', '*')
   res.header(
     "Access-Control-Allow-Headers",
@@ -77,9 +77,7 @@ app.use(function (req, res, next) {
   );
   next();
 });
-
-app.use(express.urlencoded({ extended: true }))
-app.use(conf.originUndefined, cors(conf.cors))
+app.options('/new', cors(conf.cors))
 app.use(express.json())
 
 // Get all arXiv documents
@@ -148,7 +146,7 @@ app.get('/arXivID/:arXivID', (request, response) => {
 //   })
 // })
 
-app.post('/new', async (request, response) => {
+app.post('/new', cors(conf.cors), async (request, response) => {
   const arXivID = request.body.arXivID
 
   const params = {
