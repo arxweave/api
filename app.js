@@ -70,7 +70,7 @@ const app = express()
 app.use(function (req, res, next) {
 
   const origins = whilelist.join(',')
-  res.header('Access-Control-Allow-Origin', 'https://sw4rtz.it')
+  res.header('Access-Control-Allow-Origin', '*')
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
