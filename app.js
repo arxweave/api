@@ -52,17 +52,16 @@ const conf = {
   },
   // Cross Origin Resource Sharing Options
   cors: {
-    // origin handler
     origin: function (origin, cb) {
-      // The origin header is set by the browser.
+      // The value of the Origin header is set by the browser.
       if (!origin || whilelist.indexOf(origin) != -1) {
         cb(null, true);
       } else {
         cb(new Error('invalid origin: ' + origin), false);
       }
     },
-    optionsSuccessStatus: 204,
-    preflightContinue: false,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
+    optionsSuccessStatus: 200, //Some legacy browsers (IE11, various SmartTVs) choke on 204
   }
 }
 
@@ -70,16 +69,17 @@ const app = express()
 
 app.use(express.urlencoded({ extended: true }))
 app.use(conf.originUndefined, cors(conf.cors))
-app.use(function (req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
-app.options('/new', cors(conf.cors))
-app.options('/all', cors(conf.cors))
+app.use(cors(conf.cors))
+// app.use(function (req, res, next) {
+//   res.header('Access-Control-Allow-Origin', '*')
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept"
+//   );
+//   next();
+// });
+// app.options('/new', cors(conf.cors))
+// app.options('/all', cors(conf.cors))
 app.use(express.json())
 
 // Get all arXiv documents
