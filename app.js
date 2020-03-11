@@ -25,7 +25,7 @@ const docClient = new AWS.DynamoDB.DocumentClient({
 const whilelist = [
   process.env.APP_DOMAIN,
   'https://sw4rtz.it',
-  'https://wwww.sw4rtz.it',
+  'https://www.sw4rtz.it',
   'https://sw4rtz.netlify.com',
   'https://localhost:3000',
   'http://localhost:3000',
@@ -54,7 +54,8 @@ const conf = {
   cors: {
     origin: function (origin, cb) {
       // The value of the Origin header is set by the browser.
-      if (!origin || whilelist.indexOf(origin) != -1) {
+      console.log('Origin', origin, whilelist.indexOf(origin))
+      if (!origin || whilelist.indexOf(origin) !== -1) {
         cb(null, true);
       } else {
         cb(new Error('invalid origin: ' + origin), false);
