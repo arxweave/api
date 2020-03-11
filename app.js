@@ -61,7 +61,8 @@ const conf = {
         cb(new Error('invalid origin: ' + origin), false);
       }
     },
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 204,
+    preflightContinue: false,
   }
 }
 
@@ -78,6 +79,7 @@ app.use(function (req, res, next) {
   next();
 });
 app.options('/new', cors(conf.cors))
+app.options('/all', cors(conf.cors))
 app.use(express.json())
 
 // Get all arXiv documents
