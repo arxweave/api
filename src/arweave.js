@@ -1,17 +1,17 @@
 require('dotenv').config()
 
 const fs = require('fs')
-const { getJwk } = require('./src/utils')
+const { getJwk } = require('./utils')
 
 const jwk = getJwk()
 
 const arweave = require('arweave/node').init({
-  host: 'arweave.net',// Hostname or IP address for a Arweave host
-  port: 443,          // Port
-  protocol: 'https',  // Network protocol http or https
-  timeout: 20000,     // Network request timeouts in milliseconds
-  logging: false,     // Enable network request logging
-});
+  host: 'arweave.net', // Hostname or IP address for a Arweave host
+  port: 443, // Port
+  protocol: 'https', // Network protocol http or https
+  timeout: 20000, // Network request timeouts in milliseconds
+  logging: false, // Enable network request logging
+})
 
 function ArweaveService() {
   /*
@@ -24,20 +24,20 @@ function ArweaveService() {
     // ! default winston value 12064776 which is equivalent to 0.000012064776 ar
     try {
       // Create a new tx instance
-      const tx = await arweave.createTransaction({
-        data,
-        reward,
-      }, jwk);
+      const tx = await arweave.createTransaction(
+        {
+          data,
+          reward,
+        },
+        jwk
+      )
 
       // This is really ugly but setting it during createTransaction fails.
-      tags.forEach(t => tx.addTag(
-        Object.keys(t)[0],
-        Object.values(t)[0]
-      ))
+      tags.forEach(t => tx.addTag(Object.keys(t)[0], Object.values(t)[0]))
 
       // Sign the tx
       await arweave.transactions.sign(tx, jwk)
-      return tx;
+      return tx
     } catch (err) {
       return new Error(err)
     }
@@ -49,7 +49,7 @@ function ArweaveService() {
       return {
         status: res.status,
         data: res.data,
-        id: tx.id
+        id: tx.id,
       }
     } catch (err) {
       console.log('Broadcast:'.err)
@@ -57,7 +57,7 @@ function ArweaveService() {
     }
   }
 
-  const watchTx = async (id) => {
+  const watchTx = async id => {
     if (!id) return new Error('WatchTx requires and id')
     return await arweave.transactions.getStatus(id)
   }
@@ -66,18 +66,18 @@ function ArweaveService() {
     Convert the values of a transaction into human readable form.
     More importantly return link to data on arweave.net.
   */
-  const getTx = async (txId) => {
+  const getTx = async txId => {
     try {
       const tx = await arweave.transactions.get(txId)
       return {
         ...tx,
         data: tx.get('data', { decode: true, string: true }),
         tags: tx.get('tags').map(tag => {
-          let key = tag.get('name', { decode: true, string: true });
-          let value = tag.get('value', { decode: true, string: true });
-          return (`${key} : ${value}`);
+          let key = tag.get('name', { decode: true, string: true })
+          let value = tag.get('value', { decode: true, string: true })
+          return `${key} : ${value}`
         }),
-        url: `https://arweave.net/tx/${tx.id}/data.html`
+        url: `https://arweave.net/tx/${tx.id}/data.html`,
       }
     } catch (err) {
       return new Error(err)
@@ -108,7 +108,6 @@ function ArweaveService() {
     address,
     balance,
   }
-
 }
 
 /*
@@ -120,8 +119,9 @@ function ArweaveService() {
 
 async function main() {
   const s = ArweaveService()
-  const data = '<html><head><meta charset="UTF-8"></head><body><h1>Faster!</h1></body></html>'
-  const tags = [{ 'Content-Type': 'text/html' }, { 'CustomTag': 'super-dodge' }]
+  const data =
+    '<html><head><meta charset="UTF-8"></head><body><h1>Faster!</h1></body></html>'
+  const tags = [{ 'Content-Type': 'text/html' }, { CustomTag: 'super-dodge' }]
   try {
     const rawTx = await s.createDataTx({ data, tags })
     console.log('Tx Ready', rawTx.id)
@@ -131,7 +131,7 @@ async function main() {
     // 200: broadcasted
     // 208: transaction already processed
     if (broadcastedTx.status === 200 || broadcastedTx.status === 208) {
-      let stop = false;
+      let stop = false
       const timerName = 'Tx processing time'
       console.time(timerName)
       while (!stop) {
@@ -140,7 +140,7 @@ async function main() {
         // 202: Pending
         if (confirmedTx.status === 200) {
           console.log('Confirmed!')
-          stop = true;
+          stop = true
         }
       }
       console.timeEnd(timerName)
