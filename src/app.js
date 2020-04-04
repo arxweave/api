@@ -243,7 +243,7 @@ app.post('/new', cors(conf.cors), async (request, response) => {
             txStatus: `${broadcastedTx.status}`,
           })
         } else {
-          response.send({ data: rawTx })
+          response.send({ status: 'Something went wrong', data: rawTx })
           console.log('Saving to DB:', broadcastedTx)
         }
       } catch (error) {

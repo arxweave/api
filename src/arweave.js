@@ -32,7 +32,7 @@ function ArweaveService() {
       )
 
       // This is really ugly but setting it during createTransaction fails.
-      Object.entries(tags).forEach((k, v) => tx.addTag(k, v))
+      Object.entries(tags).forEach(([k, v]) => tx.addTag(k, v))
 
       // Sign the tx. Strangely the sign has no return value.
       await arweave.transactions.sign(tx, jwk)
@@ -52,7 +52,7 @@ function ArweaveService() {
         .then((res) => res.data)
 
       return createDataTx({
-        data: data,
+        data: uInt8,
         tags: { ...tags, 'Content-Type': 'application/pdf' },
         reward: txPrice.toString(),
       })
@@ -93,7 +93,8 @@ function ArweaveService() {
       const tx = await arweave.transactions.get(txId)
       return {
         ...tx,
-        data: tx.get('data', { decode: true, string: true }),
+        data: '',
+        // data: tx.get('data', { decode: true, string: true }),
         tags: tx.get('tags').map((tag) => {
           let key = tag.get('name', { decode: true, string: true })
           let value = tag.get('value', { decode: true, string: true })
