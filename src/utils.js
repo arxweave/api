@@ -1,14 +1,5 @@
 const getJwk = () => {
-  return {
-    ...JSON.parse(process.env.JWK),
-    n: process.env.JWK_N,
-    d: process.env.JWK_D,
-    p: process.env.JWK_P,
-    q: process.env.JWK_Q,
-    dp: process.env.JWK_DP,
-    dq: process.env.JWK_DQ,
-    qi: process.env.JWK_QI,
-  }
+  return JSON.parse(process.env.JWK)
 }
 
 const base64ToUint8 = (base64) => {
