@@ -19,7 +19,7 @@ function ArweaveService() {
     data: text/html
     tags: [ {k: v} ]
   */
-  const createDataTx = async ({ data, tags = [], reward = '12064776' }) => {
+  const createDataTx = async ({ data, tags = {}, reward = '12064776' }) => {
     // ! default winston value 12064776 which is equivalent to 0.000012064776 ar
     try {
       // Create a new tx instance
@@ -32,11 +32,10 @@ function ArweaveService() {
       )
 
       // This is really ugly but setting it during createTransaction fails.
-      tags.forEach((t) => tx.addTag(Object.keys(t)[0], Object.values(t)[0]))
+      Object.entries(tags).forEach((k, v) => tx.addTag(k, v))
 
-      // Sign the tx
-      const v = await arweave.transactions.sign(tx, jwk)
-      console.log(v)
+      // Sign the tx. Strangely the sign has no return value.
+      await arweave.transactions.sign(tx, jwk)
       return tx
     } catch (err) {
       console.error('[ArweaveService]: ', err)
@@ -53,9 +52,9 @@ function ArweaveService() {
         .then((res) => res.data)
 
       return createDataTx({
-        data: uInt8,
-        tags: [...tags, { 'Content-Type': 'application/pdf' }],
-        reward: txPrice,
+        data: data,
+        tags: { ...tags, 'Content-Type': 'application/pdf' },
+        reward: txPrice.toString(),
       })
     } catch (err) {
       console.error('Failed to get price', err)
@@ -65,14 +64,17 @@ function ArweaveService() {
 
   const broadcastTx = async ({ tx }) => {
     try {
-      const res = await arweave.transactions.post(tx)
+      const res = await arweave.transactions.post(tx).catch((res) => {
+        throw new Error(res.data)
+      })
+
       return {
         status: res.status,
         data: res.data,
         id: tx.id,
       }
     } catch (err) {
-      console.log('Broadcast:'.err)
+      console.error('Broadcast:'.err)
       return new Error(err)
     }
   }

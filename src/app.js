@@ -1,3 +1,4 @@
+// Load ENV
 require('dotenv').config()
 
 const express = require('express')
@@ -200,23 +201,21 @@ app.post('/new', cors(conf.cors), async (request, response) => {
 
         const rawTx = await ArweaveService.createPDFTx({
           data: arXivPdfBase64,
-          tags: [
-            {
-              // Encode: 'base64',
-              arXivID: arXivID,
-              authors: JSON.stringify(entry.author),
-              updated: entry.updated,
-              published: entry.published,
-              title: entry.title,
-              summary: entry.summary,
-              pdfLink: entry.id.replace('abs', 'pdf'),
-            },
-          ],
+          tags: {
+            // Encode: 'base64',
+            arXivID: arXivID,
+            authors: JSON.stringify(entry.author),
+            updated: entry.updated,
+            published: entry.published,
+            title: entry.title,
+            summary: entry.summary,
+            pdfLink: entry.id.replace('abs', 'pdf'),
+          },
         })
 
         const broadcastedTx = await ArweaveService.broadcastTx({ tx: rawTx })
 
-        if (broadcastedTx.id) {
+        if (broadcastedTx.id && broadcastedTx.status === 200) {
           await dynamoDB.putItem(
             {
               TableName: 'Arxweave',
@@ -244,6 +243,7 @@ app.post('/new', cors(conf.cors), async (request, response) => {
             txStatus: `${broadcastedTx.status}`,
           })
         } else {
+          response.send({ data: rawTx })
           console.log('Saving to DB:', broadcastedTx)
         }
       } catch (error) {
