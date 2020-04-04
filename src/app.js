@@ -32,7 +32,7 @@ const whilelist = [
   'http://localhost:8000',
 ].filter(Boolean)
 
-const isValidReferrrer = r => whilelist.filter(w => r.includes(w))
+const isValidReferrrer = (r) => whilelist.filter((w) => r.includes(w))
 
 // CORS config adapted from
 // https://dustinpfister.github.io/2018/01/28/heroku-cors/
@@ -40,7 +40,7 @@ const conf = {
   // Our frontend uses a webnpack proxy to call the dev api. When doing so the request is sent from the
   // front projects domain (localhost) and the browser considers the request as 'same-origin' so it
   // doesn't add the 'origin' header. At this point our api receives a request with 'origin' undefined.
-  originUndefined: function(req, res, next) {
+  originUndefined: function (req, res, next) {
     if (
       !req.headers.origin &&
       req.headers.referer &&
@@ -56,7 +56,7 @@ const conf = {
   },
   // Cross Origin Resource Sharing Options
   cors: {
-    origin: function(origin, cb) {
+    origin: function (origin, cb) {
       // The value of the Origin header is set by the browser.
       console.log('Origin', origin, whilelist.indexOf(origin))
       if (!origin || whilelist.indexOf(origin) !== -1) {
