@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const express = require('express')
 const cors = require('cors')
 const AWS = require('aws-sdk')
@@ -174,86 +176,79 @@ app.post('/new', cors(conf.cors), async (request, response) => {
   }
 
   dynamoDB.getItem(params, async (err, data) => {
-    if (err) console.log('Error', err)
-    else {
-      // If object does not exists, add it in dynamoDB and Arweave.
-      if (Object.keys(data).length === 0) {
-        try {
-          const responseArxiv = await axios.get(
-            `https://export.arxiv.org/api/query?id_list=${arXivID}`
-          )
-          const entry = parser.convertToJson(
-            parser.getTraversalObj(responseArxiv.data, {}),
-            {}
-          ).feed.entry
+    if (err) {
+      console.log('Error', err)
+    } else if (Object.keys(data).length > 0) {
+      // If object already exists in dynamoDB
+      response.send({
+        status: 'Bad Request',
+        msg: `DOI ${arXivID} already exists`,
+      })
+    } else {
+      // Else permify PID
+      try {
+        const responseArxiv = await axios.get(
+          `https://export.arxiv.org/api/query?id_list=${arXivID}`
+        )
+        const entry = parser.convertToJson(
+          parser.getTraversalObj(responseArxiv.data, {}),
+          {}
+        ).feed.entry
 
-          const arXivPdfBase64 = await pdf2base64(
-            entry.id.replace('abs', 'pdf')
-          )
+        // TODO: can we skip the base64 conversion and go directly to Uint8Array?
+        const arXivPdfBase64 = await pdf2base64(entry.id.replace('abs', 'pdf'))
 
-          const arweaveTxPrice = await axios.get(
-            `https://arweave.net/price/${Buffer.byteLength(
-              arXivPdfBase64,
-              'utf8'
-            )}`
-          )
+        const rawTx = await ArweaveService.createPDFTx({
+          data: arXivPdfBase64,
+          tags: [
+            {
+              // Encode: 'base64',
+              arXivID: arXivID,
+              authors: JSON.stringify(entry.author),
+              updated: entry.updated,
+              published: entry.published,
+              title: entry.title,
+              summary: entry.summary,
+              pdfLink: entry.id.replace('abs', 'pdf'),
+            },
+          ],
+        })
 
-          const rawTx = await ArweaveService.createDataTx({
-            data: arXivPdfBase64,
-            reward: `${arweaveTxPrice.data}`,
-            tags: [
-              {
-                Encode: 'base64',
-                'Content-Type': 'application/pdf',
-                arXivID: arXivID,
-                authors: JSON.stringify(entry.author),
-                updated: entry.updated,
-                published: entry.published,
-                title: entry.title,
-                summary: entry.summary,
-                pdfLink: entry.id.replace('abs', 'pdf'),
+        const broadcastedTx = await ArweaveService.broadcastTx({ tx: rawTx })
+
+        if (broadcastedTx.id) {
+          await dynamoDB.putItem(
+            {
+              TableName: 'Arxweave',
+              Item: {
+                arXivID: { S: arXivID },
+                authors: { S: JSON.stringify(entry.author) },
+                updated: { S: entry.updated },
+                published: { S: entry.published },
+                title: { S: entry.title },
+                summary: { S: entry.summary },
+                pdfLink: { S: entry.id.replace('abs', 'pdf') },
+                broadcastedTxID: { S: broadcastedTx.id },
+                statusArweave: { S: `${broadcastedTx.status}` }, // NOTE: status attribute is a dynamo name reserved.
               },
-            ],
-          })
-
-          const broadcastedTx = await ArweaveService.broadcastTx({ tx: rawTx })
-
-          if (broadcastedTx.id)
-            await dynamoDB.putItem(
-              {
-                TableName: 'Arxweave',
-                Item: {
-                  arXivID: { S: arXivID },
-                  authors: { S: JSON.stringify(entry.author) },
-                  updated: { S: entry.updated },
-                  published: { S: entry.published },
-                  title: { S: entry.title },
-                  summary: { S: entry.summary },
-                  pdfLink: { S: entry.id.replace('abs', 'pdf') },
-                  broadcastedTxID: { S: broadcastedTx.id },
-                  statusArweave: { S: `${broadcastedTx.status}` }, // NOTE: status attribute is a dynamo name reserved.
-                },
-              },
-              (err, data) => {
-                if (err) console.log('Error', err)
-                else console.log('Success', data)
-              }
-            )
-
+            },
+            (err, data) => {
+              if (err) console.log('Error', err)
+              else console.log('Success', data)
+            }
+          )
           response.send({
             status: broadcastedTx.status === 200 ? 'Success' : 'Error',
             msg: `Data is uploading to arweave with this broadcast ID ${broadcastedTx.id} and Arweave status ${broadcastedTx.status}.`,
             txId: `${broadcastedTx.id}`,
             txStatus: `${broadcastedTx.status}`,
           })
-        } catch (error) {
-          console.error(error)
+        } else {
+          console.log('Saving to DB:', broadcastedTx)
         }
-      } else
-        response.send({
-          status: 'Bad Request',
-          msg: `This arXiv entry is already uploaded.`,
-        })
+      } catch (error) {
+        console.error(error)
+      }
     }
   })
 })

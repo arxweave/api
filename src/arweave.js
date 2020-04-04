@@ -1,7 +1,6 @@
-require('dotenv').config()
-
 const fs = require('fs')
-const { getJwk } = require('./utils')
+const axios = require('axios')
+const { getJwk, base64ToUint8 } = require('./utils')
 
 const jwk = getJwk()
 
@@ -20,7 +19,7 @@ function ArweaveService() {
     data: text/html
     tags: [ {k: v} ]
   */
-  const createDataTx = async ({ data, tags = [], reward = '22064776' }) => {
+  const createDataTx = async ({ data, tags = [], reward = '12064776' }) => {
     // ! default winston value 12064776 which is equivalent to 0.000012064776 ar
     try {
       // Create a new tx instance
@@ -33,12 +32,33 @@ function ArweaveService() {
       )
 
       // This is really ugly but setting it during createTransaction fails.
-      tags.forEach(t => tx.addTag(Object.keys(t)[0], Object.values(t)[0]))
+      tags.forEach((t) => tx.addTag(Object.keys(t)[0], Object.values(t)[0]))
 
       // Sign the tx
-      await arweave.transactions.sign(tx, jwk)
+      const v = await arweave.transactions.sign(tx, jwk)
+      console.log(v)
       return tx
     } catch (err) {
+      console.error('[ArweaveService]: ', err)
+      return new Error(err)
+    }
+  }
+
+  const createPDFTx = async ({ data, tags = [] }) => {
+    if (!data) throw new Error('[ArweaveService]: data must exist')
+    const uInt8 = base64ToUint8(data)
+    try {
+      const txPrice = await axios
+        .get(`https://arweave.net/price/${uInt8.byteLength}`)
+        .then((res) => res.data)
+
+      return createDataTx({
+        data: uInt8,
+        tags: [...tags, { 'Content-Type': 'application/pdf' }],
+        reward: txPrice,
+      })
+    } catch (err) {
+      console.error('Failed to get price', err)
       return new Error(err)
     }
   }
@@ -57,7 +77,7 @@ function ArweaveService() {
     }
   }
 
-  const watchTx = async id => {
+  const watchTx = async (id) => {
     if (!id) return new Error('WatchTx requires and id')
     return await arweave.transactions.getStatus(id)
   }
@@ -66,13 +86,13 @@ function ArweaveService() {
     Convert the values of a transaction into human readable form.
     More importantly return link to data on arweave.net.
   */
-  const getTx = async txId => {
+  const getTx = async (txId) => {
     try {
       const tx = await arweave.transactions.get(txId)
       return {
         ...tx,
         data: tx.get('data', { decode: true, string: true }),
-        tags: tx.get('tags').map(tag => {
+        tags: tx.get('tags').map((tag) => {
           let key = tag.get('name', { decode: true, string: true })
           let value = tag.get('value', { decode: true, string: true })
           return `${key} : ${value}`
@@ -102,6 +122,7 @@ function ArweaveService() {
 
   return {
     createDataTx,
+    createPDFTx,
     broadcastTx,
     watchTx,
     getTx,

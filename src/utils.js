@@ -1,12 +1,13 @@
 const getJwk = () => {
-  return {
-    kty: 'RSA',
-    ext: true,
-    e: process.env.JWK_KEY,
-    n: process.env.JWK_SECRET,
-  }
+  return JSON.parse(process.env.JWK)
+}
+
+const base64ToUint8 = (base64) => {
+  const buf = Buffer.from(base64, 'base64')
+  return new Uint8Array(buf)
 }
 
 module.exports = {
-  getJwk
+  getJwk,
+  base64ToUint8,
 }
