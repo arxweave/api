@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "arweave": "^1.6.0",
-    "aws-sdk": "^2.606.0",
+    "aws-sdk": "^2.814.0",
     "axios": "^0.19.1",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
